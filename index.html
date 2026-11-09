@@ -28,7 +28,7 @@ input,textarea,select{width:100%;padding:13px;margin:0 0 9px;background:#0e0a17;
 input:focus,textarea:focus,select:focus{border-color:var(--purple);box-shadow:0 0 0 3px #a879ec22}
 textarea{min-height:110px;resize:vertical;line-height:1.6}
 button{font:inherit;cursor:pointer}
-.btn{border:0;padding:11px 15px;border-radius:10px;font-weight:bold;margin:4px 2px}
+.btn{display:inline-block;text-decoration:none;border:0;padding:11px 15px;border-radius:10px;font-weight:bold;margin:4px 2px}
 .primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white}
 .secondary{background:#342443;color:white;border:1px solid #503766}
 .danger{background:#64283b;color:#ffeaf0}
@@ -97,7 +97,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:4px 0 20px}
 
 <section class="panel" id="smartAssistant">
  <h2>🧠 مساعد Wassim — يهدر بالدارجة الباتنية</h2>
- <p class="assistant-intro">حطّ واش بعثولك، اختار الستايل، ونقترحلك رد بالدارجة. تقدر تنسخو ولا تزيدو لقائمة الردود.</p>
+ <p class="assistant-intro">حطّ واش بعثولك، اختار الستايل، ونقترحلك رد بالدارجة. تقدر تنسخو، تفتح رسائل Instagram، ولا تزيدو لقائمة الردود.</p>
  <label for="incomingMessage">الرسالة لي وصلتك</label>
  <div class="assistant-controls">
   <textarea id="incomingMessage" maxlength="2000" placeholder="مثلاً: صحا خويا، واش راك؟"></textarea>
@@ -118,11 +118,12 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:4px 0 20px}
   <p id="suggestionText"></p>
   <div class="actions">
    <button class="btn primary" id="copySuggestion" type="button">📋 نسخ الرد</button>
+   <a class="btn secondary" href="https://www.instagram.com/direct/inbox/" target="_blank" rel="noopener noreferrer">📩 افتح رسائل Instagram</a>
    <button class="btn success" id="saveSuggestion" type="button">➕ زيدو للردود</button>
    <button class="btn secondary" id="anotherSuggestion" type="button">🔄 اقتراح آخر</button>
   </div>
  </div>
- <p class="hint">ملاحظة: المساعد يتصل بخدمة Gemini عبر خادم Wassim Bot لاقتراح الردود. ما يبعث حتى رسالة وحدو؛ تقدر تنسخ الرد أو تحفظو.</p>
+ <p class="hint">ملاحظة: المساعد يتصل بخدمة Gemini عبر خادم Wassim Bot لاقتراح الردود. ما يبعث حتى رسالة وحدو؛ انسخ الرد وافتح رسائل Instagram والصقو بنفسك.</p>
 </section>
 
 <section class="panel">
