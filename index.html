@@ -55,16 +55,12 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:4px 0 20px}
  .actions .btn{flex:1 1 28%}
 }
 
-/* وضع التعديل */
-#editorPanel.editing-mode{border-color:#c49aff;box-shadow:0 0 0 3px #a879ec2b,0 16px 45px #0005}
-#editorPanel.editing-mode #formTitle{color:#e2caff}
-.editor-notice{display:none;background:#342443;border:1px solid #8152c5;color:#f1e5ff;padding:10px 12px;border-radius:10px;margin:0 0 12px;line-height:1.6}
-#editorPanel.editing-mode .editor-notice{display:block}
 .assistant-intro{color:var(--muted);line-height:1.7;margin:-5px 0 12px}
 .assistant-result{background:#100b1c;border:1px solid #65468a;border-radius:14px;padding:15px;margin-top:14px}
 .assistant-result p{white-space:pre-wrap;line-height:1.8;margin:8px 0 12px;font-size:1.05rem}
 .assistant-controls{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:10px}
-.assistant-controls textarea,.assistant-controls select{margin:0}
+.assistant-controls textarea{margin:0}
+.assistant-controls select{margin:0}
 @media(max-width:650px){.assistant-controls{grid-template-columns:1fr}}
 
 </style>
@@ -86,7 +82,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:4px 0 20px}
  <div class="stat"><span class="stat-label">⚡ مرات الاستعمال</span><strong class="stat-number" id="usedCount">0</strong></div>
 </section>
 
-<section class="panel" id="editorPanel">
+<section class="panel">
  <h2 id="formTitle">➕ إضافة رد جديد</h2>
  <form id="replyForm">
   <label for="title">عنوان الرد</label>
@@ -126,7 +122,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:4px 0 20px}
    <button class="btn secondary" id="anotherSuggestion" type="button">🔄 اقتراح آخر</button>
   </div>
  </div>
- <p class="hint">ملاحظة: المساعد يخدم باقتراحات محلية جاهزة حسب كلمات الرسالة والستايل؛ ماشي AI متصل بالإنترنت، وما يبعث حتى رسالة وحدو.</p>
+ <p class="hint">ملاحظة: هاذي نسخة محلية باقتراحات جاهزة حسب معنى الرسالة والستايل؛ ماشي ذكاء اصطناعي متصل بالإنترنت، وما تبعث حتى رسالة وحدها.</p>
 </section>
 
 <section class="panel">
@@ -184,9 +180,7 @@ function persist(){
  render();
 }
 function resetForm(){
- editingId=null;
- $("replyForm").reset();
- $("editorPanel").classList.remove("editing-mode");
+ editingId=null;$("replyForm").reset();
  $("formTitle").textContent="➕ إضافة رد جديد";
  $("saveBtn").textContent="حفظ الرد";
  $("cancelBtn").classList.add("hidden");
@@ -197,8 +191,7 @@ $("replyForm").addEventListener("submit",event=>{
  if(!title||!message){alert("عمّر العنوان ونص الرد أولاً.");return}
  if(editingId!==null){
   const item=replies.find(r=>String(r.id)===String(editingId));
-  if(!item){alert("الرد لي راك تعدّل فيه ما بقاش موجود.");resetForm();return}
-  item.title=title;item.message=message;
+  if(item){item.title=title;item.message=message}
  }else{
   replies.unshift({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),title,message,copied:0,used:0,createdAt:Date.now()});
  }
@@ -209,15 +202,10 @@ $("cancelBtn").addEventListener("click",resetForm);
 function editReply(id){
  const item=replies.find(r=>String(r.id)===String(id));
  if(!item){alert("الرد غير موجود.");return}
- editingId=item.id;
- $("title").value=item.title;
- $("message").value=item.message;
- $("formTitle").textContent="✏️ تعديل الرد";
- $("saveBtn").textContent="حفظ التعديل";
+ editingId=item.id;$("title").value=item.title;$("message").value=item.message;
+ $("formTitle").textContent="✏️ تعديل الرد";$("saveBtn").textContent="حفظ التعديل";
  $("cancelBtn").classList.remove("hidden");
- $("editorPanel").classList.add("editing-mode");
- $("editorPanel").scrollIntoView({behavior:"smooth",block:"center"});
- window.setTimeout(()=>$("title").focus({preventScroll:true}),350);
+ window.scrollTo({top:0,behavior:"smooth"});$("title").focus();
 }
 function deleteReply(id){
  if(!confirm("متأكد تحب تحذف هذا الرد؟"))return;
@@ -316,7 +304,7 @@ $("importFile").addEventListener("change",event=>{
  reader.readAsText(file);
 });
 
-// مساعد محلي لاقتراح ردود بالدارجة؛ لا يتصل بإنستغرام ولا يرسل رسائل.
+// مساعد محلي: اقتراحات بالدارجة الباتنية دون إرسال أي رسالة.
 let currentSuggestion="";
 let suggestionIndex=0;
 const responseBank={
@@ -382,8 +370,8 @@ function detectIntent(message){
  if(/سلام|صحا|صباح الخير|مساء الخير|واش راك|لاباس|مرحبا|اهلا|أهلا/.test(m))return "greeting";
  if(/شكرا|شكراً|يعطيك الصحة|بارك الله|مشكور|مرسي/.test(m))return "thanks";
  if(/سمحلي|سامحني|نعتذر|معذرة|غلطت|آسف|اسف/.test(m))return "apology";
- if(/نحبك|توحشتك|وحشتني|اشتقتلك|غالي|عزيز/.test(m))return "affection";
- if(/يعجبني|شابة|مليح|هايل|كفو|برافو|زوين/.test(m))return "compliment";
+ if(/نحبك|نحبك بزاف|توحشتك|وحشتني|اشتقتلك|غالي|عزيز/.test(m))return "affection";
+ if(/يعجبني|شابة|شابة بزاف|مليح|هايل|زعما مبدع|كفو|برافو|زوين/.test(m))return "compliment";
  if(/علاش|كيفاش|واش|شكون|وين|وقتاش|قداه|هل /.test(m))return "question";
  if(/مقلق|زعفان|حزين|تعبان|كرهت|مشكل|قلقت|ظلموني|ماشي مليح/.test(m))return "upset";
  return "fallback";
@@ -392,7 +380,8 @@ function generateSuggestion(){
  const incoming=$("incomingMessage").value.trim();
  if(!incoming){alert("حطّ الرسالة لي وصلتك أولاً خويا.");$("incomingMessage").focus();return}
  const tone=$("replyTone").value;
- const options=responseBank[detectIntent(incoming)][tone];
+ const intent=detectIntent(incoming);
+ const options=responseBank[intent][tone];
  currentSuggestion=options[suggestionIndex%options.length];
  suggestionIndex++;
  $("suggestionText").textContent=currentSuggestion;
