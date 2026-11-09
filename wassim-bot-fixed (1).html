@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#100b1c">
+<title>Wassim Bot | إدارة الردود</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0713;--panel:#171020;--line:#38264d;--text:#f8f4ff;--muted:#a99bb8;--purple:#a879ec;--purple2:#8152c5}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:22px;color:var(--text);font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at 85% 0%,#39205266,transparent 32rem),var(--bg)}
+.container{width:min(100%,1000px);margin:auto}
+header,.panel,.stat{background:linear-gradient(145deg,#1c1428,#15101e);border:1px solid var(--line);border-radius:18px;box-shadow:0 16px 45px #0004}
+header{padding:24px;margin-bottom:18px}
+h1{margin:0 0 7px;color:#d6baff;font-size:clamp(1.5rem,4vw,2rem)}
+h2{font-size:1.15rem;margin:0 0 16px}
+small,.muted,.stat-label{color:var(--muted)}
+.account{margin:14px 0 0}
+.status{color:#91e5ad;margin:9px 0 0}
+.topline,.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.panel{padding:20px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stat{padding:16px}
+.stat-label{font-size:.9rem}
+.stat-number{display:block;color:#d6baff;font-size:1.8rem;font-weight:800;margin-top:7px}
+label{display:block;color:#dfd0f1;margin:12px 0 6px}
+input,textarea,select{width:100%;padding:13px;margin:0 0 9px;background:#0e0a17;color:white;border:1px solid #49345e;border-radius:11px;font:inherit;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--purple);box-shadow:0 0 0 3px #a879ec22}
+textarea{min-height:110px;resize:vertical;line-height:1.6}
+button{font:inherit;cursor:pointer}
+.btn{border:0;padding:11px 15px;border-radius:10px;font-weight:bold;margin:4px 2px}
+.primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white}
+.secondary{background:#342443;color:white;border:1px solid #503766}
+.danger{background:#64283b;color:#ffeaf0}
+.success{background:#1d553b;color:#e6fff0}
+.toolbar{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:10px;margin:14px 0}
+.toolbar input,.toolbar select{margin:0}
+.reply{background:linear-gradient(145deg,#241a32,#1c1427);border:1px solid #49345e;border-radius:15px;padding:16px;margin-top:12px}
+.reply h3{color:#d9c0ff;margin:0;font-size:1.05rem;overflow-wrap:anywhere}
+.reply p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;color:#eee8f5;margin:12px 0}
+.meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.82rem}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.actions .btn{margin:0}
+.empty{text-align:center;padding:28px 10px;color:var(--muted)}
+.hint{color:var(--muted);font-size:.84rem;line-height:1.6}
+.hidden{display:none!important}
+footer{text-align:center;color:var(--muted);font-size:.82rem;padding:4px 0 20px}
+@media(max-width:650px){
+ body{padding:12px}header,.panel{padding:16px;border-radius:15px}
+ .stats{grid-template-columns:1fr;gap:8px}
+ .stat{display:flex;justify-content:space-between;align-items:center;padding:12px 15px}
+ .stat-number{margin:0;font-size:1.45rem}
+ .toolbar{grid-template-columns:1fr}
+ .topline>button{width:100%}
+ .actions .btn{flex:1 1 28%}
+}
+
+/* وضع التعديل */
+#editorPanel.editing-mode{border-color:#c49aff;box-shadow:0 0 0 3px #a879ec2b,0 16px 45px #0005}
+#editorPanel.editing-mode #formTitle{color:#e2caff}
+.editor-notice{display:none;background:#342443;border:1px solid #8152c5;color:#f1e5ff;padding:10px 12px;border-radius:10px;margin:0 0 12px;line-height:1.6}
+#editorPanel.editing-mode .editor-notice{display:block}
+.assistant-intro{color:var(--muted);line-height:1.7;margin:-5px 0 12px}
+.assistant-result{background:#100b1c;border:1px solid #65468a;border-radius:14px;padding:15px;margin-top:14px}
+.assistant-result p{white-space:pre-wrap;line-height:1.8;margin:8px 0 12px;font-size:1.05rem}
+.assistant-controls{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:10px}
+.assistant-controls textarea,.assistant-controls select{margin:0}
+@media(max-width:650px){.assistant-controls{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<main class="container">
+<header>
+ <div class="topline">
+  <div><h1>Wassim Bot 🤖</h1><small>لوحة احترافية لإدارة الردود الشخصية</small></div>
+  <button class="btn secondary" id="toggleBtn" type="button">تشغيل وضع التجربة</button>
+ </div>
+ <p class="account">الحساب: <b>@ham__wassim</b></p>
+ <p class="status" id="status">● وضع التجربة متوقف</p>
+</header>
+
+<section class="stats">
+ <div class="stat"><span class="stat-label">📚 الردود المحفوظة</span><strong class="stat-number" id="savedCount">0</strong></div>
+ <div class="stat"><span class="stat-label">📋 مرات النسخ</span><strong class="stat-number" id="copiedCount">0</strong></div>
+ <div class="stat"><span class="stat-label">⚡ مرات الاستعمال</span><strong class="stat-number" id="usedCount">0</strong></div>
+</section>
+
+<section class="panel" id="editorPanel">
+ <h2 id="formTitle">➕ إضافة رد جديد</h2>
+ <form id="replyForm">
+  <label for="title">عنوان الرد</label>
+  <input id="title" maxlength="80" placeholder="مثلاً: الترحيب" required>
+  <label for="message">نص الرد</label>
+  <textarea id="message" maxlength="5000" placeholder="اكتب الرد هنا..." required></textarea>
+  <button class="btn primary" id="saveBtn" type="submit">حفظ الرد</button>
+  <button class="btn secondary hidden" id="cancelBtn" type="button">إلغاء التعديل</button>
+ </form>
+</section>
+
+
+<section class="panel" id="smartAssistant">
+ <h2>🧠 مساعد Wassim — يهدر بالدارجة الباتنية</h2>
+ <p class="assistant-intro">حطّ واش بعثولك، اختار الستايل، ونقترحلك رد بالدارجة. تقدر تنسخو ولا تزيدو لقائمة الردود.</p>
+ <label for="incomingMessage">الرسالة لي وصلتك</label>
+ <div class="assistant-controls">
+  <textarea id="incomingMessage" maxlength="2000" placeholder="مثلاً: صحا خويا، واش راك؟"></textarea>
+  <div>
+   <label for="replyTone">ستايل الرد</label>
+   <select id="replyTone">
+    <option value="natural">عفوي وباتني</option>
+    <option value="funny">مضحك وخفيف</option>
+    <option value="respectful">محترم</option>
+    <option value="cool">بارد وشوية ثقيل</option>
+    <option value="warm">حنين ولطيف</option>
+   </select>
+   <button class="btn primary" id="suggestBtn" type="button">✨ اقترحلي رد</button>
+  </div>
+ </div>
+ <div id="suggestionBox" class="assistant-result hidden" aria-live="polite">
+  <small>الرد المقترح:</small>
+  <p id="suggestionText"></p>
+  <div class="actions">
+   <button class="btn primary" id="copySuggestion" type="button">📋 نسخ الرد</button>
+   <button class="btn success" id="saveSuggestion" type="button">➕ زيدو للردود</button>
+   <button class="btn secondary" id="anotherSuggestion" type="button">🔄 اقتراح آخر</button>
+  </div>
+ </div>
+ <p class="hint">ملاحظة: المساعد يخدم باقتراحات محلية جاهزة حسب كلمات الرسالة والستايل؛ ماشي AI متصل بالإنترنت، وما يبعث حتى رسالة وحدو.</p>
+</section>
+
+<section class="panel">
+ <div class="section-title"><h2>📚 الردود المحفوظة</h2><small id="countLabel">0 رد</small></div>
+ <div class="toolbar">
+  <input id="search" type="search" placeholder="🔎 ابحث بعنوان الرد أو نصه...">
+  <select id="sort" aria-label="ترتيب الردود">
+   <option value="newest">الأحدث أولاً</option>
+   <option value="az">العنوان: أ إلى ي</option>
+   <option value="za">العنوان: ي إلى أ</option>
+   <option value="mostCopied">الأكثر نسخاً</option>
+   <option value="mostUsed">الأكثر استعمالاً</option>
+  </select>
+ </div>
+ <div id="replies"></div>
+</section>
+
+<section class="panel">
+ <h2>💾 النسخ الاحتياطي</h2>
+ <button class="btn secondary" id="exportBtn" type="button">⬇️ تصدير نسخة احتياطية</button>
+ <button class="btn secondary" id="importBtn" type="button">⬆️ استرجاع نسخة</button>
+ <input class="hidden" type="file" id="importFile" accept=".json,application/json">
+ <p class="hint">النسخة تشمل الردود وإحصائيات النسخ والاستعمال. احتفظ بها لاسترجاع بياناتك عند الحاجة.</p>
+</section>
+<footer>Wassim Bot © <span id="year"></span> — بياناتك محفوظة في هذا المتصفح</footer>
+</main>
+
+<script>
+"use strict";
+const KEY="wassimReplies";
+const STATS_KEY="wassimBotStats";
+let replies=[];
+let editingId=null;
+let active=false;
+let stats={copied:0,used:0};
+const $=id=>document.getElementById(id);
+const num=value=>Number.isFinite(Number(value))&&Number(value)>=0?Number(value):0;
+
+function loadData(){
+ try{
+  const data=JSON.parse(localStorage.getItem(KEY)||"[]");
+  replies=Array.isArray(data)?data.filter(r=>r&&typeof r.title==="string"&&typeof r.message==="string").map((r,i)=>({
+   id:r.id??(Date.now()+i),title:r.title,message:r.message,
+   copied:num(r.copied),used:num(r.used),createdAt:num(r.createdAt)||Date.now()
+  })):[];
+ }catch{replies=[]}
+ try{
+  const saved=JSON.parse(localStorage.getItem(STATS_KEY)||"{}");
+  stats={copied:num(saved.copied),used:num(saved.used)};
+ }catch{stats={copied:0,used:0}}
+}
+function persist(){
+ localStorage.setItem(KEY,JSON.stringify(replies));
+ localStorage.setItem(STATS_KEY,JSON.stringify(stats));
+ render();
+}
+function resetForm(){
+ editingId=null;
+ $("replyForm").reset();
+ $("editorPanel").classList.remove("editing-mode");
+ $("formTitle").textContent="➕ إضافة رد جديد";
+ $("saveBtn").textContent="حفظ الرد";
+ $("cancelBtn").classList.add("hidden");
+}
+$("replyForm").addEventListener("submit",event=>{
+ event.preventDefault();
+ const title=$("title").value.trim(),message=$("message").value.trim();
+ if(!title||!message){alert("عمّر العنوان ونص الرد أولاً.");return}
+ if(editingId!==null){
+  const item=replies.find(r=>String(r.id)===String(editingId));
+  if(!item){alert("الرد لي راك تعدّل فيه ما بقاش موجود.");resetForm();return}
+  item.title=title;item.message=message;
+ }else{
+  replies.unshift({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),title,message,copied:0,used:0,createdAt:Date.now()});
+ }
+ resetForm();persist();
+});
+$("cancelBtn").addEventListener("click",resetForm);
+
+function editReply(id){
+ const item=replies.find(r=>String(r.id)===String(id));
+ if(!item){alert("الرد غير موجود.");return}
+ editingId=item.id;
+ $("title").value=item.title;
+ $("message").value=item.message;
+ $("formTitle").textContent="✏️ تعديل الرد";
+ $("saveBtn").textContent="حفظ التعديل";
+ $("cancelBtn").classList.remove("hidden");
+ $("editorPanel").classList.add("editing-mode");
+ $("editorPanel").scrollIntoView({behavior:"smooth",block:"center"});
+ window.setTimeout(()=>$("title").focus({preventScroll:true}),350);
+}
+function deleteReply(id){
+ if(!confirm("متأكد تحب تحذف هذا الرد؟"))return;
+ replies=replies.filter(r=>String(r.id)!==String(id));
+ if(String(editingId)===String(id))resetForm();
+ persist();
+}
+async function copyReply(id){
+ const item=replies.find(r=>String(r.id)===String(id));if(!item)return;
+ try{
+  if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(item.message);
+  else{
+   const area=document.createElement("textarea");area.value=item.message;
+   area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);
+   area.select();const ok=document.execCommand("copy");area.remove();
+   if(!ok)throw new Error("copy failed");
+  }
+  item.copied++;stats.copied++;persist();alert("تم نسخ الرد ✅");
+ }catch{alert("ما قدرناش ننسخو تلقائياً. افتح الرد وانسخ النص يدوياً.")}
+}
+function markUsed(id){
+ const item=replies.find(r=>String(r.id)===String(id));if(!item)return;
+ item.used++;stats.used++;persist();alert("تم تسجيل استعمال الرد ✅");
+}
+function makeButton(label,className,handler){
+ const b=document.createElement("button");b.type="button";b.className="btn "+className;
+ b.textContent=label;b.addEventListener("click",handler);return b;
+}
+function render(){
+ $("savedCount").textContent=replies.length;
+ $("copiedCount").textContent=stats.copied;
+ $("usedCount").textContent=stats.used;
+ $("countLabel").textContent=replies.length+" رد";
+ const area=$("replies"),query=$("search").value.trim().toLocaleLowerCase();
+ let filtered=replies.filter(r=>r.title.toLocaleLowerCase().includes(query)||r.message.toLocaleLowerCase().includes(query));
+ const sort=$("sort").value;
+ if(sort==="az")filtered.sort((a,b)=>a.title.localeCompare(b.title,"ar"));
+ if(sort==="za")filtered.sort((a,b)=>b.title.localeCompare(a.title,"ar"));
+ if(sort==="mostCopied")filtered.sort((a,b)=>b.copied-a.copied);
+ if(sort==="mostUsed")filtered.sort((a,b)=>b.used-a.used);
+ if(sort==="newest")filtered.sort((a,b)=>b.createdAt-a.createdAt);
+ area.replaceChildren();
+ if(!filtered.length){
+  const empty=document.createElement("p");empty.className="empty";
+  empty.textContent=replies.length?"ما لقيناش رد يطابق البحث.":"ماكان حتى رد محفوظ. أضف أول رد من الأعلى.";
+  area.appendChild(empty);return;
+ }
+ filtered.forEach(r=>{
+  const card=document.createElement("article");card.className="reply";
+  const heading=document.createElement("h3");heading.textContent=r.title;
+  const paragraph=document.createElement("p");paragraph.textContent=r.message;
+  const meta=document.createElement("div");meta.className="meta";
+  const copied=document.createElement("span");copied.textContent="📋 نسخ: "+r.copied;
+  const used=document.createElement("span");used.textContent="⚡ استعمال: "+r.used;
+  meta.append(copied,used);
+  const actions=document.createElement("div");actions.className="actions";
+  actions.append(
+   makeButton("📋 نسخ","primary",()=>copyReply(r.id)),
+   makeButton("⚡ استُعمل","success",()=>markUsed(r.id)),
+   makeButton("✏️ تعديل","secondary",()=>editReply(r.id)),
+   makeButton("🗑️ حذف","danger",()=>deleteReply(r.id))
+  );
+  card.append(heading,paragraph,meta,actions);area.appendChild(card);
+ });
+}
+$("search").addEventListener("input",render);
+$("sort").addEventListener("change",render);
+$("toggleBtn").addEventListener("click",()=>{
+ active=!active;
+ $("status").textContent=active?"● وضع التجربة شغال — لا يرسل رسائل تلقائياً":"● وضع التجربة متوقف";
+ $("toggleBtn").textContent=active?"إيقاف وضع التجربة":"تشغيل وضع التجربة";
+});
+$("exportBtn").addEventListener("click",()=>{
+ const backup={app:"Wassim Bot",version:2,exportedAt:new Date().toISOString(),replies,stats};
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="wassim-bot-backup.json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$("importBtn").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",event=>{
+ const file=event.target.files[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const parsed=JSON.parse(reader.result);
+   const data=Array.isArray(parsed)?parsed:parsed.replies;
+   if(!Array.isArray(data)||!data.every(r=>r&&typeof r.title==="string"&&typeof r.message==="string"))throw new Error("invalid");
+   if(!confirm("استرجاع النسخة سيعوّض الردود الحالية. هل تريد المتابعة؟"))return;
+   replies=data.map((r,i)=>({id:r.id??(Date.now()+i),title:r.title,message:r.message,copied:num(r.copied),used:num(r.used),createdAt:num(r.createdAt)||Date.now()}));
+   if(parsed.stats&&typeof parsed.stats==="object")stats={copied:num(parsed.stats.copied),used:num(parsed.stats.used)};
+   resetForm();persist();alert("تم استرجاع النسخة بنجاح ✅");
+  }catch{alert("الملف غير صالح أو لا يحتوي على نسخة Wassim Bot.")}
+  finally{event.target.value=""}
+ };
+ reader.readAsText(file);
+});
+
+// مساعد محلي لاقتراح ردود بالدارجة؛ لا يتصل بإنستغرام ولا يرسل رسائل.
+let currentSuggestion="";
+let suggestionIndex=0;
+const responseBank={
+ greeting:{
+  natural:["وعليكم السلام خويا، لاباس الحمد لله، نتا واش راك؟","صحا خويا، راني مليح الحمد لله، واش حوالك؟","أهلا بيك خو، نورت، لاباس عليك؟"],
+  funny:["وعليكم السلام، راني عايشين بالبركة 😂 نتا واش حوالك؟","صحا خويا، لاباس… غير القهوة ناقصتنا 😂","مرحبا خو، واش هاذ الغيبة؟"],
+  respectful:["وعليكم السلام، الحمد لله بخير، نتمنى تكون بخير حتى نتا.","أهلا وسهلا، ربي يحفظك، كيف راك؟"],
+  cool:["لاباس، الحمد لله.","مليح خو، نتا؟","راني بخير، صحا."],
+  warm:["وعليكم السلام الغالي، ربي يخليك، لاباس عليك؟","أهلا بيك، فرحتني برسالتك، ربي يهنيك."]
+ },
+ thanks:{
+  natural:["بلا مزية خويا، هذا واجبنا.","الله يسلمك، ما درنا والو.","تستاهل كل خير خو."],
+  funny:["ماكان والو، الحساب يجي نهار آخر 😂","على راسي، غير ما تنساش القهوة 😂"],
+  respectful:["العفو، هذا واجبي، ربي يبارك فيك.","لا شكر على واجب، ربي يحفظك."],
+  cool:["عادي، ماكان حتى مشكل.","مرحبا."],
+  warm:["تستاهل الخير كامل، ربي يفرح قلبك.","من عيوني، ديما مرحبا بيك."]
+ },
+ apology:{
+  natural:["ماكان والو خو، تصرا، ربي يسهل.","ماعليش، خليها على ربي، المهم راك مليح."],
+  funny:["سامحتك بصح المرة الجاية جيب معاك قهوة 😂","فاتت خو، ما نطولوش فيها 😂"],
+  respectful:["ماكان حتى مشكل، ربي يسهّل عليك.","مقبول، وما تحملش هم."],
+  cool:["عادي، صرات.","ماشي مشكل."],
+  warm:["ماعليش خويا، ما تحملش روحك، ربي يهنيك.","كلشي يفوت، المهم تبقى المودة."]
+ },
+ compliment:{
+  natural:["يعطيك الصحة خويا، من ذوقك.","ربي يحفظك، شهادة نعتز بيها.","تسلم، نتا الزين."],
+  funny:["بعينيك الزينة تشوف كلش زين 😂","راك تعرف تهدر خويا 😂"],
+  respectful:["شكراً جزيلاً، هذا من لطفك.","ربي يبارك فيك، كلامك نعتز به."],
+  cool:["تسلم.","من ذوقك."],
+  warm:["كلامك فرحني، ربي يحفظك ويعزك.","الله يخليك، نتا ثاني غالي."]
+ },
+ affection:{
+  natural:["حتى نتا وحشتني خويا، وين هاذ الغيبة؟","ربي يخليك، ديما في البال."],
+  funny:["واش راك، وليت شاعر اليوم؟ 😂","يا خويا غير ما تبكيّناش 😂"],
+  respectful:["ربي يدوم المحبة والاحترام بيناتنا.","حتى نتا عزيز وغالي، ربي يحفظك."],
+  cool:["ربي يحفظك.","حتى نتا."],
+  warm:["حتى نتا توحشتك بزاف، ربي لا يغيّبك.","ديما عندك بلاصة في القلب، ربي يخليك."]
+ },
+ question:{
+  natural:["قول خويا، نسمع فيك.","واش حبيت تعرف؟ قول برك.","إيه خو، تفضل."],
+  funny:["اسقسي برك، بصح إذا سؤال صعيب نخمم ونهرب 😂","هات السؤال، نشوفو واش نديرو 😂"],
+  respectful:["تفضل، راني نسمعلك.","أكيد، قول واش حبيت تعرف."],
+  cool:["قول.","واش كاين؟"],
+  warm:["قول خويا، راني معاك.","تفضل الغالي، نعاونك باللي نقدر."]
+ },
+ upset:{
+  natural:["واش صرا خويا؟ احكيلي، يمكن نلقاو حل.","ما تقلقش روحك، كل مشكل وعندو حل."],
+  funny:["شكون قلّقك؟ نبعثولو لجنة صلح 😂","هَوّن عليك خو، الدنيا ما تسواش."],
+  respectful:["نتفهمك، إن شاء الله تتحسن الأمور.","إذا تحب تحكي، راني نسمعلك."],
+  cool:["إن شاء الله تتصلح.","ربي يجيب الخير."],
+  warm:["ربي يفرّج عليك خويا، ماكش وحدك.","احكيلي واش كاين، نسمعلك من قلبي."]
+ },
+ fallback:{
+  natural:["فهمتك خويا، زيد وضّحلي شوية.","إيه صح، واش رايك نهدرو عليها؟","وصلت الفكرة، قولّي أكثر."],
+  funny:["يا خويا دخلتني في الموضوع، زيد فهمني 😂","استنى برك نركّز معاك 😂"],
+  respectful:["فهمت قصدك، هل تقدر توضّحلي أكثر؟","شكراً على التوضيح، نحب نفهم التفاصيل أكثر."],
+  cool:["فهمت.","وضحلي أكثر."],
+  warm:["راني معاك، زيد احكيلي.","نسمعلك خويا، وضّحلي برك."]
+ }
+};
+function detectIntent(message){
+ const m=message.toLocaleLowerCase();
+ if(/سلام|صحا|صباح الخير|مساء الخير|واش راك|لاباس|مرحبا|اهلا|أهلا/.test(m))return "greeting";
+ if(/شكرا|شكراً|يعطيك الصحة|بارك الله|مشكور|مرسي/.test(m))return "thanks";
+ if(/سمحلي|سامحني|نعتذر|معذرة|غلطت|آسف|اسف/.test(m))return "apology";
+ if(/نحبك|توحشتك|وحشتني|اشتقتلك|غالي|عزيز/.test(m))return "affection";
+ if(/يعجبني|شابة|مليح|هايل|كفو|برافو|زوين/.test(m))return "compliment";
+ if(/علاش|كيفاش|واش|شكون|وين|وقتاش|قداه|هل /.test(m))return "question";
+ if(/مقلق|زعفان|حزين|تعبان|كرهت|مشكل|قلقت|ظلموني|ماشي مليح/.test(m))return "upset";
+ return "fallback";
+}
+function generateSuggestion(){
+ const incoming=$("incomingMessage").value.trim();
+ if(!incoming){alert("حطّ الرسالة لي وصلتك أولاً خويا.");$("incomingMessage").focus();return}
+ const tone=$("replyTone").value;
+ const options=responseBank[detectIntent(incoming)][tone];
+ currentSuggestion=options[suggestionIndex%options.length];
+ suggestionIndex++;
+ $("suggestionText").textContent=currentSuggestion;
+ $("suggestionBox").classList.remove("hidden");
+}
+$("suggestBtn").addEventListener("click",()=>{suggestionIndex=0;generateSuggestion()});
+$("anotherSuggestion").addEventListener("click",generateSuggestion);
+$("copySuggestion").addEventListener("click",async()=>{
+ if(!currentSuggestion)return;
+ try{
+  if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(currentSuggestion);
+  else{
+   const area=document.createElement("textarea");area.value=currentSuggestion;
+   area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);
+   area.select();const ok=document.execCommand("copy");area.remove();if(!ok)throw new Error("copy failed");
+  }
+  stats.copied++;persist();alert("نسخت الرد خويا ✅");
+ }catch{alert("ما قدرناش ننسخوه، انسخو يدوياً.");}
+});
+$("saveSuggestion").addEventListener("click",()=>{
+ if(!currentSuggestion)return;
+ replies.unshift({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),title:"رد مقترح — "+new Date().toLocaleDateString("ar-DZ"),message:currentSuggestion,copied:0,used:0,createdAt:Date.now()});
+ persist();alert("زدناه لقائمة الردود المحفوظة ✅");
+});
+
+$("year").textContent=new Date().getFullYear();
+loadData();render();
+</script>
+</body>
+</html>
